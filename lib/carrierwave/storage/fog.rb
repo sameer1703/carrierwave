@@ -147,13 +147,8 @@ module CarrierWave
 
       def connection
         @connection ||= begin
-          if ConfigSettings.default.try(:fog).present?
-            options = credentials = ConfigSettings.default.fog.credentials
-            self.class.connection_cache[credentials] = ::Fog::Storage.new(options)
-          else
-            options = credentials = uploader.fog_credentials
-            self.class.connection_cache[credentials] ||= ::Fog::Storage.new(options)
-          end
+          options = credentials = uploader.fog_credentials
+          self.class.connection_cache[credentials] ||= ::Fog::Storage.new(options)
         end
       end
 
@@ -496,11 +491,7 @@ module CarrierWave
         end
 
         def fog_provider
-          if ConfigSettings.default.try(:fog).present?
-            ConfigSettings.default.fog.credentials.provider.to_s
-          else
-            @uploader.fog_credentials[:provider].to_s
-          end
+          @uploader.fog_credentials[:provider].to_s
         end
 
         def read_source_file(file_body)
