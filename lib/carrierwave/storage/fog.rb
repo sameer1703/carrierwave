@@ -147,8 +147,13 @@ module CarrierWave
 
       def connection
         @connection ||= begin
-          options = credentials = uploader.fog_credentials
-          self.class.connection_cache[credentials] ||= ::Fog::Storage.new(options)
+          if ConfigSettings.default.try(:fog).present?
+            options = credentials = ConfigSettings.default.fog.credentials
+            self.class.connection_cache[credentials] = ::Fog::Storage.new(options)
+          else
+            options = credentials = uploader.fog_credentials
+            self.class.connection_cache[credentials] ||= ::Fog::Storage.new(options)
+          end
         end
       end
 
@@ -455,12 +460,19 @@ module CarrierWave
         #
         # [Fog::#{provider}::Directory] containing directory
         #
-        def directory
+        def directory          
           @directory ||= begin
-            connection.directories.new(
-              :key    => @uploader.fog_directory,
-              :public => @uploader.fog_public
-            )
+            if ConfigSettings.default.try(:fog).present?
+              connection.directories.new(
+                :key    => ConfigSettings.default.fog.directory,
+                :public => @uploader.fog_public
+              )
+            else
+              connection.directories.new(
+                :key    => @uploader.fog_directory,
+                :public => @uploader.fog_public
+              )
+            end
           end
         end
 
@@ -484,7 +496,11 @@ module CarrierWave
         end
 
         def fog_provider
-          @uploader.fog_credentials[:provider].to_s
+          if ConfigSettings.default.try(:fog).present?
+            ConfigSettings.default.fog.credentials.provider.to_s
+          else
+            @uploader.fog_credentials[:provider].to_s
+          end
         end
 
         def read_source_file(file_body)
