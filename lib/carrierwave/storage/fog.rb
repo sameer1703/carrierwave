@@ -457,9 +457,9 @@ module CarrierWave
         #
         def directory          
           @directory ||= begin
-            if ConfigSettings.default.try(:fog).present?
+            if ConfigSettings[Rails.env].try(:fog).present?
               connection.directories.new(
-                :key    => ConfigSettings.default.fog.directory,
+                :key    => ConfigSettings[Rails.env].fog.directory,
                 :public => @uploader.fog_public
               )
             else
